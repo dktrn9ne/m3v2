@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClearInvoice — Manage Your Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow-x: hidden; }
+
+    :root {
+      --gold:    #EE7926;
+      --red:     #FF3300;
+      --navy:    #050508;
+      --white:   #ffffff;
+      --gray:    rgba(255,255,255,0.65);
+      --font-h:  'Switzer', 'DM Sans', sans-serif;
+      --font-b:  'DM Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--navy);
+      color: white;
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #ccf 0%, #e7d04c 50%, #31fb78 100%);
+      z-index: 100;
+    }
+
+    /* ── BACKGROUND VIDEO ── */
+    .bg-video-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── VIGNETTE ── */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 100% 55% at 50% 100%, rgba(5,5,8,0.92) 0%, transparent 75%),
+        radial-gradient(ellipse 55% 100% at 0% 50%,   rgba(5,5,8,0.45) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 100% at 100% 50%, rgba(5,5,8,0.45) 0%, transparent 65%),
+        radial-gradient(ellipse 80% 40% at 50% 0%,    rgba(5,5,8,0.25) 0%, transparent 60%);
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed;
+      top: 5px; left: 0; right: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 5%;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #FF3300, #EE7926);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-logo-icon svg { width: 16px; height: 16px; fill: white; }
+    .nav-logo-text {
+      font-family: var(--font-h);
+      font-weight: 600;
+      font-size: 17px;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: white; }
+
+    .nav-auth {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .btn-signin {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.45rem 1rem;
+      font-family: var(--font-b);
+      transition: color 0.2s;
+    }
+    .btn-signin:hover { color: white; }
+    .btn-signup {
+      font-size: 14px;
+      font-weight: 500;
+      color: black;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 9px;
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      font-family: var(--font-b);
+      backdrop-filter: blur(12px);
+      transition: background 0.2s;
+    }
+    .btn-signup:hover { background: white; }
+
+    .hamburger {
+      display: none;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      color: white;
+    }
+    .hamburger svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 65px; left: 1rem; right: 1rem;
+      z-index: 49;
+      background: rgba(10,10,18,0.97);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 1rem;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .mobile-menu a:hover { background: rgba(255,255,255,0.08); }
+    .mobile-divider { border-top: 1px solid rgba(255,255,255,0.1); margin: 0.5rem 0; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 1.5rem 4rem;
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s 0.1s both;
+    }
+    .badge-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #48bb78;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    /* ── HEADLINE ── */
+    h1 {
+      font-family: var(--font-h);
+      font-weight: 600;
+      font-size: clamp(2.6rem, 6.5vw, 4.5rem);
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      color: white;
+      max-width: 780px;
+      margin-bottom: 1.4rem;
+      animation: fadeUp 0.7s 0.25s both;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #FF3300 0%, #EE7926 55%, #FFD166 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── SUBHEAD ── */
+    .subhead {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: rgba(255,255,255,0.72);
+      max-width: 480px;
+      line-height: 1.7;
+      margin-bottom: 2.4rem;
+      animation: fadeUp 0.7s 0.4s both;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.7s 0.55s both;
+    }
+
+    /* Primary */
+    .btn-primary {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0px;
+      padding: 0.85rem 1.8rem;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #FF3300 0%, #EE7926 100%);
+      color: white;
+      font-family: var(--font-h);
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      border: none;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 14px;
+      background: #EE7926;
+      filter: blur(18px);
+      opacity: 0.2;
+      transition: opacity 0.3s;
+      z-index: -1;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      pointer-events: none;
+    }
+    .btn-primary:hover { transform: scale(1.05); }
+    .btn-primary:hover::before { opacity: 0.55; }
+    .btn-primary .arrow {
+      width: 0; overflow: hidden;
+      display: inline-flex; align-items: center;
+      transition: width 0.22s, margin 0.22s;
+    }
+    .btn-primary:hover .arrow {
+      width: 20px;
+      margin-right: 4px;
+    }
+    .btn-primary .arrow svg {
+      width: 15px; height: 15px;
+      stroke: white; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* Secondary */
+    .btn-secondary {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.85rem 1.8rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.9);
+      color: black;
+      font-family: var(--font-h);
+      font-weight: 500;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      border: none;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s;
+    }
+    .btn-secondary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0,0,0,0.05);
+      pointer-events: none;
+    }
+    .btn-secondary:hover { transform: scale(1.05); background: white; }
+
+    /* ── SOCIAL PROOF ── */
+    .social-proof {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.7s 0.7s both;
+    }
+    .avatars {
+      display: flex;
+    }
+    .avatars img {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      object-fit: cover;
+      margin-left: -10px;
+    }
+    .avatars img:first-child { margin-left: 0; }
+    .stars {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 2px;
+    }
+    .stars svg { width: 12px; height: 12px; fill: #EE7926; }
+    .social-text {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ── FEATURE PILLS ── */
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      animation: fadeUp 0.7s 0.85s both;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.14);
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+    }
+    .pill svg {
+      width: 13px; height: 13px;
+      stroke: #EE7926; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(26px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links, .nav-auth { display: none; }
+      .hamburger { display: flex; align-items: center; justify-content: center; }
+      h1 { font-size: clamp(2.2rem, 8vw, 3rem); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top gradient bar -->
+  <div class="top-bar"></div>
+
+  <!-- Background video -->
+  <div class="bg-video-wrap">
+    <video id="bgVideo" autoplay loop muted playsinline preload="auto"></video>
+  </div>
+
+  <!-- Vignette overlay -->
+  <div class="vignette"></div>
+
+  <!-- Navbar -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <span class="nav-logo-text">ClearInvoice</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#">Features</a></li>
+      <li><a href="#">Pricing</a></li>
+      <li><a href="#">Reviews</a></li>
+    </ul>
+
+    <div class="nav-auth">
+      <button class="btn-signin">Sign In</button>
+      <button class="btn-signup">Sign Up</button>
+    </div>
+
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <svg id="menuIcon" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </nav>
+
+  <!-- Mobile dropdown -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#">Features</a>
+    <a href="#">Pricing</a>
+    <a href="#">Reviews</a>
+    <div class="mobile-divider"></div>
+    <a href="#">Sign In</a>
+    <a href="#" style="background:rgba(255,255,255,0.9);color:black;font-weight:500;text-align:center;">Sign Up</a>
+  </div>
+
+  <!-- Hero -->
+  <main class="hero">
+
+    <!-- Badge -->
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Now live for 210k+ stores worldwide
+    </div>
+
+    <!-- Headline -->
+    <h1>
+      Manage your online store<br>
+      while save <span class="gradient-text">3x</span> operating cost
+    </h1>
+
+    <!-- Subhead -->
+    <p class="subhead">
+      ClearInvoice takes the hassle out of billing with easy-to-use tools built for modern commerce.
+    </p>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn-primary">
+        <span class="arrow">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+        Get Started Free
+      </button>
+      <button class="btn-secondary">Watch Demo</button>
+    </div>
+
+    <!-- Social Proof -->
+    <div class="social-proof">
+      <div class="avatars">
+        <img src="https://i.pravatar.cc/40?img=11" alt="" />
+        <img src="https://i.pravatar.cc/40?img=22" alt="" />
+        <img src="https://i.pravatar.cc/40?img=33" alt="" />
+      </div>
+      <div>
+        <div class="stars">
+          <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <div class="social-text">Trusted by 210k+ stores worldwide</div>
+      </div>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="pills">
+      <div class="pill">
+        <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Instant invoicing
+      </div>
+      <div class="pill">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Real-time analytics
+      </div>
+      <div class="pill">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        PCI-DSS compliant
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ── Background Video ──────────────────────────────────────────
+    const VIDEO_URL = './hero.mp4';
+    const video = document.getElementById('bgVideo');
+
+    function initVideo() {
+      // Direct MP4 — set src and play
+      video.src = VIDEO_URL;
+      video.load();
+
+      const p = video.play();
+      if (p !== undefined) {
+        p.catch(err => {
+          // Autoplay blocked — add click-to-play fallback
+          document.addEventListener('click', () => video.play(), { once: true });
+          document.addEventListener('touchstart', () => video.play(), { once: true });
+        });
+      }
+    }
+
+    // Small delay so page renders first
+    setTimeout(initVideo, 100);
+
+    // ── Mobile Menu ───────────────────────────────────────────────
+    let menuOpen = false;
+    function toggleMenu() {
+      menuOpen = !menuOpen;
+      const menu = document.getElementById('mobileMenu');
+      const icon = document.getElementById('menuIcon');
+      menu.classList.toggle('open', menuOpen);
+      icon.innerHTML = menuOpen
+        ? '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+        : '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
+    }
+    // Close menu on outside click
+    document.addEventListener('click', e => {
+      if (menuOpen && !e.target.closest('nav') && !e.target.closest('.mobile-menu')) {
+        menuOpen = false;
+        document.getElementById('mobileMenu').classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
